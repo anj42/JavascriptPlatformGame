@@ -13,7 +13,11 @@ All images in the game except for the main background image were created by the 
 
 Link to the game: http://users.aber.ac.uk/anj42/ftw/game/index.html
 
-Credit list:
+
+
+
+
+Credit list: \n
 Jump sound: http://www.freesound.org/people/LloydEvans09/sounds/187024/
 
 Game over sound: http://www.freesound.org/people/noirenex/sounds/159408/
