@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Like The Wind</title>
+    <link href="styles.css" rel="stylesheet"/>
+
+    <script type="text/javascript">
+
+        /*
+        Images are being preloaded to provide better performance.
+         */
+        //if (document.images) {
+
+            menu_btn = new Image ();
+            menu_btn.src = "menu_btn.png";
+
+            menu_back = new Image();
+            menu_back.src = "menu_background.png";
+
+            roof_image = new Image();
+            roof_image.src="roof.png";
+
+            roof_filler=  new Image();
+            roof_filler.src = "roof_filler.png";
+
+            platform_image = new Image();
+            platform_image.src= "platform.png";
+
+            music_btn = new Image();
+            music_btn.src= "music_btn.png";
+
+            background_image = new Image();
+            background_image.src= "background.png";
+
+            play_image = new Image();
+            play_image.src = "play_btn.png";
+
+            player1 = new Image();
+            player1.src = "player1.png";
+
+            player2 = new Image();
+            player2.src = "player2.png";
+
+            player3 = new Image();
+            player3.src = "player3.png";
+
+            player4 = new Image();
+            player4.src = "player4.png";
+
+            player5 = new Image();
+            player5.src = "player5.png";
+
+            player6 = new Image();
+            player6.src = "player6.png";
+
+            player7 = new Image();
+            player7.src = "player7.png";
+
+            gap_image = new Image();
+            gap_image.src ="gap.png";
+
+            player_jumping = new Image();
+            player_jumping.src = "player_jumping.png";
+
+            player_idle = new Image();
+            player_idle.src = "player_idle.png";
+
+            game_over_background = new Image();
+            game_over_background.src = "game_over_background.png";
+
+            console.log("images loaded");
+
+       // }
+    </script>
+
+</head>
+
+<body background="web_background.png">
+<br><br>
+<div id="navbar" align="center">
+    <ul>
+        <li><a href="index.html">Play the game</a></li>
+        <li><a href="about.html">About</a></li>
+    </ul>
+</div>
+<br>
+<div id="container" align="center">
+    <canvas id ="canvas"></canvas>
+    <script type="text/javascript">
+
+/**
+ * Created by Antoni Janas on 21/04/2015.
+ */
+
+
+/*
+ Initialise all variables.
+ */
+// dimensions of the screen
+var width= 1200;
+var height= 800;
+//time counter
+var time = 0;
+// will be changed to false when player looses (game over)
+var game_going= true;
+// basis of the game (an interval loop)
+var game_loop;
+
+// menu loop
+var menu_loop;
+var menu_on = true;
+
+// game over mechanics
+var game_over_loop;
+
+// canvas data and background image
+var canvas= document.getElementById("canvas");
+var ctx= canvas.getContext("2d");
+canvas.width= width;
+canvas.height= height;
+
+//var audio;
+//var music_playing;
+
+//platforms data
+platforms = [];
+platform_width= 200;
+platform_height= 30;
+
+//gaps in the roof data
+gap_width = 400;
+gap_height = 200;
+gaps = [];
+gaps_number= 1;
+
+//holds the roof object for player to run on
+roof = [];
+roof_number= 2;
+// roof data
+var roof_width = 600;
+var roof_height = 200;
+
+// player gets points while the character is running/jumping
+var points= 0;
+
+// game is going to get faster and faster as time passes
+var speed_up =0;
+
+// jump sound data
+jump_audio= new Audio();
+jump_audio.src= "jump.wav";
+jump_audio.loop = false;
+
+/*
+Function for drawing the background.
+ */
+function draw_background(){
+    ctx.drawImage(background_image, 0, 0);
+    ctx.drawImage(roof_filler, 0, 650);
+
+}
+
+/*
+Clears the canvas and allows animation to go on.
+ */
+// function to clear the canvas (it saves time to write "clear" instead of the full version)
+function clear () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //draw_background();
+}
+
+/*
+Player object and all player functions.
+ */
+var player= new (function() {
+    var this_player = this;
+
+    //attributes related to animation
+    this_player.interval= 0;                                           // interval marks where to change the player
+                                                                       // character
+
+    this_player.is_jumping = false;                                    // these attributes determine the state
+    this_player.is_falling = false;                                    // of player character
+    this_player.is_running = false;                                    // of player character
+
+    this_player.jump_speed = 0;                                        // jump and fall speed specify how long will
+    this_player.fall_speed = 0;                                        // the character stay in the air
+
+
+    // attributes related to the graphics
+    this_player.image = null;                                           // to be changed according to player's state
+
+    this_player.width = 240;
+    this_player.height = 300;
+
+    // attributes related to the position
+    this_player.X = 0;
+    this_player.Y = 0;
+
+    /*
+    Draws the player image. It will choose the proper frame according to the interval value.
+     */
+    this_player.draw = function () {
+        try {
+            if (this_player.is_running){                                                    // checks if player is running
+                if (this_player.interval > 0 && this_player.interval < 3){
+                    this_player.image= player1;
+                } else if (this_player.interval >= 3 && this_player.interval < 6){
+                    this_player.image= player2;
+                }  else if (this_player.interval >= 6 && this_player.interval < 9){
+                    this_player.image= player3;
+                } else if (this_player.interval >= 12 && this_player.interval < 15){
+                    this_player.image= player4;
+                } else if (this_player.interval >= 18 && this_player.interval < 21){
+                    this_player.image= player5;
+                } else if (this_player.interval >= 24 && this_player.interval < 27){
+                    this_player.image= player6;
+                } else if (this_player.interval >= 30 && this_player.interval < 33){
+                    this_player.image= player7;
+                }
+            } else if (this_player.is_falling){                                             //checks if player is falling
+                this_player.image = player_jumping;
+            } else if (this_player.is_jumping){                                             //checks if player is jumping
+                this_player.image = player_jumping;
+            } else {
+                this_player.image = player_idle;                                            //otherwise display the idle position
+            }
+            // draw the character image
+            ctx.drawImage(this_player.image, this_player.X, this_player.Y, this_player.width, this_player.height);
+
+        } catch (e) {
+            //
+        };
+
+        // increase interval to animate the character
+        if (this_player.interval == 33 || this_player.interval > 33 ) {
+            this_player.interval = 0;
+        }
+        this_player.interval++;
+    }
+
+    //setting the position of player
+    this_player.setPosition = function (x, y) {
+        this_player.X = x;
+        this_player.Y = y;
+    }
+
+    // function for jumping
+    this_player.jump = function () {
+        if(!this_player.is_jumping && !this_player.is_falling){                           // check the state
+            this_player.fall_speed=0;
+            this_player.is_jumping= true;                                                 // this will trigger control_jump()
+            this_player.jump_speed= 25;                                                   // number can vary
+            this_player.is_running= false;                                                   // number can vary
+        }
+    }
+
+
+    // controlling jump, what happens to the player when he is going up in the air
+    this_player.control_jump = function (){
+        this_player.setPosition(this_player.X , this_player.Y - this_player.jump_speed);
+        this_player.scroll_env(20 +(speed_up/400));
+        speed_up++;
+        // decrease "jump_speed" in order to simulate gravity
+        // this also varies depending on the level
+        this_player.jump_speed--;
+        // player flies up until jump_speed = 0
+        // then jump sequence ends
+        if (this_player.jump_speed == 0) {
+            this_player.is_jumping = false;
+            this_player.is_falling = true;
+            this_player.fall_speed = 1;
+        } else if (this_player.jump_speed < 25 && this_player.jump_speed > 20 ){        // this will play the jump sound
+            jump_audio.play();                                                          // with a slight delay after jumping
+        }
+    }
+
+    // what happens to the player when he is falling down
+    this_player.control_fall = function () {
+        // similar situation to this_player.control_jump
+        if (this_player.Y < height - this_player.height) {
+            this_player.setPosition(this_player.X, this_player.Y + this_player.fall_speed);
+            this_player.scroll_env(20 +(speed_up/400));
+            speed_up++;
+            this_player.fall_speed++;
+        } else {
+            this_player.fall_stop();
+        }
+    }
+
+    // function to stop the player falling down
+    this_player.fall_stop = function() {
+        this_player.is_falling= false;
+        this_player.fall_speed = 0;
+    }
+
+
+    this_player.run = function () {
+        if(!this_player.is_jumping && !this_player.is_falling){                           // check the state
+            this_player.is_running= true;                                                 // this will trigger control_run()
+        }
+    }
+
+    // change the environment when player is running
+    this_player.control_run = function (){
+       this_player.scroll_env(20 + (speed_up/250));
+        speed_up++;
+    }
+
+    // function used to scroll the environment
+    // gets called every time the user moves, creates continuous roof etc.
+    // goes through arrays of objects to animate them all (move them left)
+    this_player.scroll_env= function (speed){
+
+        var scroll_value = speed;                       // running and jumps have different speed value
+
+        platforms.forEach(function(plat, index){
+            plat.x -= scroll_value;
+            //if the platform moves outside of the screen a new one is generated
+            if (plat.x < 0 - platform_width * 0.3){
+                //x:y  coordinates are random
+                var y_position = 0.7 * height -  ((Math.random()*1) * 200 );
+                platforms[index] = new platform(width + platform_width , y_position);
+            }
+        });
+
+        roof.forEach(function(roo, index){
+            roo.x -= scroll_value;
+            //if the roof moves outside of the screen a new one is generated
+            if (roo.x < 0 - roof_width){
+                roof[index] = new roof_basis(1200, 650);
+            }
+        });
+
+        gaps.forEach(function(g, index){
+            g.x -= scroll_value;
+            if (g.x < 0 - gap_width){
+                gaps[index] = new gap((Math.random() *width)+(width + gap_width) + (speed_up/10), 650);
+            }
+
+        });
+        // add points and increase the speed_up value to make the game progressively more difficult
+        speed_up++;
+        points ++;
+    }
+
+})();
+
+// set the initial position of the player
+player.setPosition(200, 400);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+// roof basis - player character runs on it
+var roof_basis = function (x, y){
+    var this_roof = this;
+
+    this_roof.color = "#334f3c";                                // set the colour of the platform
+
+    // collision detection
+    this_roof.on_collide = function() {
+        player.fall_stop();
+    };
+
+    //position
+    // x is rounded down to a nearest integer value
+    this_roof.x= x;
+    this_roof.y= y;
+
+    //draw the roof
+    this_roof.draw = function () {
+        ctx.fillStyle = "rgba(255,255,255,0)";
+        ctx.fillRect(this_roof.x, this_roof.y, width, roof_height);
+        ctx.drawImage(roof_image, this_roof.x, this_roof.y);
+    };
+    return this_roof;
+};
+
+// generating and storing the roof basis to run on
+var create_roof = function () {
+    roof[0] = new roof_basis(0, 650);
+    roof[1] = new roof_basis(600, 650);
+    roof[2] = new roof_basis(1200, 650);
+    roof[3] = new roof_basis(1800, 650);
+}();
+
+// gap object
+var gap = function (x, y){
+    var this_gap = this;
+
+    this_gap.color = "#ffffff";                                // set the colour of the gap
+
+    // collision detection
+    this_gap.on_collide = function() {
+        game_over();
+    };
+
+    //position of a gap
+    // x is rounded down to a nearest integer value
+    this_gap.x= x;
+    this_gap.y= y;
+
+    //draw a gap function
+    this_gap.draw = function () {
+            ctx.fillRect(this_gap.x, this_gap.y, gap_width, gap_height);
+            ctx.drawImage(gap_image, this_gap.x, this_gap.y - 100);
+    }
+    return this_gap;
+};
+
+// generating and storing all the gaps
+var create_gaps = function () {
+        for (var i = 0; i < gaps_number; i++) {
+            gaps[i] = new gap(width + gap_width*2, 650);
+        }
+}
+//();
+
+// platform object
+var platform = function (x, y){
+    var this_platform = this;
+
+    // collision detection
+    this_platform.on_collide = function() {
+        player.fall_stop();
+        player.jump();
+    };
+
+    //position of a platform
+    this_platform.x= x;
+    this_platform.y= y;
+
+    //draw a platform function
+    this_platform.draw = function () {
+        ctx.clearRect(this_platform.x, this_platform.y, platform_width, platform_height);
+        ctx.drawImage(platform_image, this_platform.x, this_platform.y);
+    };
+    return this_platform;
+};
+
+// generating and storing all the platforms
+var create_platforms = function () {
+
+    var y_position = 0.7 * height -  ((Math.random()*1) * 200 );
+    platforms[0] = new platform (400, y_position);
+}();
+
+//collision "physics"
+var collision_check = function () {
+    //go through each platform in the array
+    platforms.forEach(function(e, ind){
+        // check if the player is falling (otherwise collision is not needed)
+        // also check the position and dimensions of platforms and player character
+        if ((player.is_falling) && (player.X < e.x+ platform_width) && (player.X + player.width > e.x) &&
+            (player.Y + player.height > e.y) && (player.Y + player.height < e.y + platform_height)) {
+            e.on_collide();
+        } else {
+            player.is_falling = true;
+        }
+    })
+
+    // check collision with the roof
+    roof.forEach(function(e, ind){
+        if ((player.is_falling) && (player.X < e.x+ roof_width) && (player.X + player.width > e.x) &&
+            (player.Y + player.height > e.y) && (player.Y + player.height < e.y + roof_height)) {
+            e.on_collide();
+        }
+    })
+
+    // check collision with gaps (game over if it's true)
+    gaps.forEach(function(e, ind){
+        if ( player.X > e.x && player.X < e.x + gap_width &&
+            player.Y + player.height > e.y && player.Y < e.y + gap_height){
+            game_over();
+        }
+    })
+}
+
+
+var manage_gaps = function () {
+    if (gaps.length == 0) {
+        gaps.length = gaps_number;
+        create_gaps();
+        gaps.forEach(function (g) {
+            g.draw();
+        });
+    } else {
+        gaps.forEach(function (g) {
+            g.draw();
+        });
+    }
+}
+
+//functions for managing the UI, clicking music on/off buttons etc
+//gets mouse click coordinates, if it's withing button bounds it will execute given action
+var check_click_pos = function (ev) {
+
+    var x = ev.clientX - canvas.offsetLeft;
+    var y = ev.clientY - canvas.offsetTop;
+
+    //menu button
+    if (x > 25 && x < 125){
+        if (y > 25 && y < 125){
+            game_over();
+        }
+    }
+
+    // music button
+    if ( x  > 125 && x < 175){
+        if ( y > 25 && y < 75){
+            if (music_playing == true){
+                audio.pause();
+                music_playing = false;
+            } else {
+                audio.play();
+                music_playing = true;
+            }
+        }
+    }
+}
+
+// draws buttons on the screen
+var draw_ui = function (){
+    ctx.drawImage(menu_btn, 25, 25);
+    ctx.drawImage(music_btn, 125, 25);
+}
+
+//starts playing the background music
+var init_audio= function () {
+    audio= new Audio();
+    audio.src= "music.mp3";
+    audio.loop = true;
+    audio.play();
+    music_playing = true;
+}
+
+// manage mouse actions
+// press the mouse to run
+document.getElementById("canvas").onmousedown = function () {
+    if (time  > 1) {
+        player.run();
+    }
+}
+//release the mouse to jump
+document.getElementById("canvas").onmouseup = function () {
+    if (time  > 1) {
+        player.jump();
+    }
+}
+
+// game over function
+// display score and allow to return to main menu
+var game_over = function () {
+    console.log("game over");
+    //turn off background music
+    audio.pause();
+    music_playing = false;
+
+    // clear the state of the game
+    game_going = false;
+    clearTimeout(game_loop);
+    gaps.length = 0;
+
+    // needs to be removed, otherwise it will keep working in other states of the game
+    canvas.removeEventListener("click", check_click_pos);
+
+    // play the "game over" sound
+    game_over_audio= new Audio();
+    game_over_audio.src= "game_over_sound.wav";
+    game_over_audio.loop = false;
+    game_over_audio.play();
+
+
+    // display the game over info
+        setTimeout(function () {
+            clear();
+            ctx.drawImage(game_over_background, 0,0);
+
+            // add bonus points based on the current speed of the game
+            points += speed_up/10;
+
+            // display text related to score
+            ctx.fillStyle = "#790808";
+            ctx.font = "100pt Impact";
+
+            var go_message = "GAME OVER"
+            var spacing= ctx.measureText(go_message).width;
+
+            ctx.fillText(go_message, width / 2 - spacing/2, height/2 - 165);
+            ctx.font = "30pt Impact";
+            ctx.fillText("Bonus points: " + speed_up/10, 350, height / 2);
+            ctx.fillText("Your points: " + points + "   Time: " + time / 50, 350, height / 2 + 50);
+
+            ctx.drawImage(menu_btn, 550, 600);
+
+            // get information about the current best score from localStorage
+            var best_score = localStorage.getItem("best_score");
+            if (best_score == null) {
+                best_score = "0";
+                best_score = parseInt(best_score);
+            } else {
+                best_score = parseInt(best_score);
+            }
+
+            var best_time = localStorage.getItem("best_time");
+            if (best_time == null) {
+                best_time = "0";
+                best_time = parseInt(best_time);
+            } else {
+                best_time = parseInt(best_time);
+            }
+
+            // if current score is higher than the old best score, it will be added to localStorage
+            // as new high score
+
+            var high_score_message = "CONGRATULATIONS! NEW HIGH SCORE"
+            var spacing_score= ctx.measureText(high_score_message).width;
+
+            var points_input = String(points);
+            var time_input = String(time);
+            if (best_score < points) {
+                localStorage.setItem("best_score", points_input);
+                localStorage.setItem("best_time", time_input);
+
+                // print out a message to let the player about his high score
+                ctx.fillText(high_score_message, width/2 - spacing_score/2, height/2 +150);
+            }
+
+            // best score message printout
+            ctx.fillText("Best score: " + best_score + "  Time: " + best_time / 50, 350, height / 2 + 100);
+
+            // clean up the remaining data about the state of the game
+            points = 0;
+            time = 0;            
+            speed_up=0;
+
+            // brings the player to main menu when executed
+            function g_over_click(ev) {
+                var x = ev.clientX - canvas.offsetLeft;
+                var y = ev.clientY - canvas.offsetTop;
+                if(x > 550 & x < 650 && y > 600 && y < 700) {
+                    canvas.removeEventListener("click", g_over_click);
+                    main_menu();
+                }
+            }
+            canvas.addEventListener("click", g_over_click);
+        }, 100); 
+
+    };
+
+// main game function
+// draws all the elements and handles animation of the environment and player
+var game_on = function () {
+    console.log("start game");
+    // needs to clear the screen each loop in order to animate
+    // all objects properly
+    clear();
+
+    // prepare the background and other UI elements
+    draw_background();
+    ctx.fillStyle  ="#790808";
+    ctx.font = "30pt Impact";
+    ctx.fillText("POINTS: " + points, width - 260, 70);
+    time++;
+    ctx.fillText ("TIME: "+ (time/50), 200, 65);
+
+    //draw the platforms
+    platforms.forEach(function(platform){
+        platform.draw();
+    });
+
+    // draw the roof
+    roof.forEach(function(roo){
+        roo.draw();
+    });
+
+    //keyboard controls
+    document.onkeydown = key_controls;
+    function key_controls (event){
+
+        if (event.keyCode == 39){
+            player.run();
+        }
+        if(event.keyCode == 38){
+            player.jump();
+        }
+    }
+    // spawn new gaps when player passes old ones
+    manage_gaps();
+
+
+    // character related functions
+
+    //check if player is running
+    if (player.is_running == true) {
+        player.control_run();
+    }
+
+    //  jumping/falling mechanics
+    if (player.is_jumping == true) {
+        player.control_jump();
+
+    } else if (player.is_falling == true) {
+        player.control_fall();
+    }
+
+    // draws exit and sound buttons
+    draw_ui();
+    // draws the player
+    player.draw();
+
+
+    // check for collision with the environment
+    collision_check();
+
+    // this loops ends when player loses
+    if (game_going) {
+        // this loop will refresh with a 50 fps rate
+        game_loop = setTimeout(game_on, 1000 / 50);
+    }
+}
+
+
+// function to display the main menu and give it the functionality required
+var main_menu = function (){
+    console.log ("main menu");
+    // make sure that game and game over loops stopped
+    clear();
+    clearTimeout(game_loop);
+    clearTimeout(game_over_loop);
+
+    // draw the background
+    ctx.drawImage(menu_back, 0, 0);
+
+    // check if the main button was clicked
+    // if it was, start the game
+    function menu_click(ev){
+        var x = ev.clientX - canvas.offsetLeft;
+        var y = ev.clientY - canvas.offsetTop;
+
+        if(x > 525 && x < 675 && y > 500 && y < 650) {
+            canvas.removeEventListener("click", menu_click);
+            menu_on = false;
+            game_going = true;
+            clearTimeout(menu_loop);
+            canvas.addEventListener("click", check_click_pos, false);
+            init_audio();
+
+            game_on();
+        }
+    }
+    canvas.addEventListener("click", menu_click);
+
+    if (menu_on == true) {
+        menu_loop = setTimeout(menu_loop, 1000 / 50);
+    }
+}
+
+
+// function called to start the entire program
+main_menu();
+
+
+</script>
+
+</div>
+
+</body>
+</html>
