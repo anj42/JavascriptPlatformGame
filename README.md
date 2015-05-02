@@ -11,8 +11,13 @@ As it is a part of learning process, it requires a little bit of polishing.
 
 All images in the game except for the main background image were created by the author. 
 
+Link to the game: http://users.aber.ac.uk/anj42/ftw/game/index.html
+
 Credit list:
 Jump sound: http://www.freesound.org/people/LloydEvans09/sounds/187024/
+
 Game over sound: http://www.freesound.org/people/noirenex/sounds/159408/
+
 Background music: http://www.newgrounds.com/audio/listen/568498/
+
 Background image: http://tesorone.deviantart.com/
