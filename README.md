@@ -17,7 +17,8 @@ Link to the game: http://users.aber.ac.uk/anj42/ftw/game/index.html
 
 
 
-Credit list: \n
+Credit list: 
+
 Jump sound: http://www.freesound.org/people/LloydEvans09/sounds/187024/
 
 Game over sound: http://www.freesound.org/people/noirenex/sounds/159408/
